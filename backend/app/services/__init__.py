@@ -14,6 +14,7 @@ from app.services.region_dim import RegionDimService
 from app.services.heatmap_aggregate import HeatmapAggregateService
 from app.services.od_matrix import OdMatrixService
 from app.services.route_restore import RouteRestoreService
+from app.services.route_inspection import RouteInspectionService
 from app.services.density_estimate import DensityEstimateService
 from app.services.geo_quality import GeoQualityService
 from app.services.dedup_merge import DedupMergeService
@@ -34,6 +35,8 @@ SERVICES: dict[str, BaseModuleService] = {
     "heatmap_aggregate": HeatmapAggregateService(),
     "od_matrix": OdMatrixService(),
     "route_restore": RouteRestoreService(),
+    # 路径巡检为专用路由服务，不挂通用资源模块清单（前端 18 模块不变）。
+    "route_inspection": RouteInspectionService(),
     "density_estimate": DensityEstimateService(),
     "geo_quality": GeoQualityService(),
     "dedup_merge": DedupMergeService(),

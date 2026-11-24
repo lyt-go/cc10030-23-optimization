@@ -8,6 +8,10 @@ from typing import Any
 
 from app.seed import SEED_ROWS
 
+# 专用领域路由（如路径巡检）持有独立接口，不属于工作台 18 个通用模块，
+# 不出现在 /api/overview 与健康检查的模块计数里，避免前端出现未登记模块。
+HIDDEN_MODULES = {"route_inspection"}
+
 
 class Store:
     def __init__(self) -> None:
@@ -16,7 +20,7 @@ class Store:
         }
 
     def module_names(self) -> list[str]:
-        return sorted(self._tables)
+        return sorted(name for name in self._tables if name not in HIDDEN_MODULES)
 
     def rows(self, module: str) -> list[dict[str, Any]]:
         return self._tables.setdefault(module, [])

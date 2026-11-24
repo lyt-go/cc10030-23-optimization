@@ -77,5 +77,28 @@ npm run dev
 - 列表接口统一返回 `{ items, total, page, size }`，动作接口统一返回 `{ ok, message }`。
 - 状态流转只允许在 `app/services` 里改，路由层不做业务判断。
 
+## 坐标修订后的切分重算与路径巡检
+
+坐标标准化纠偏不覆盖旧数据，而是写入新的坐标版本，切分重算与巡检对账围绕版本展开：
+
+- `services/coord_transform.py`：转换结果按 `pt-vN` 版本落盘
+  （`coord_transformed/{批次}_points_pt-vN.jsonl`），`write_corrected_points`
+  把纠偏点写成新版本，旧版本保留可回溯。
+- `services/segment_recalc.py`：切分重算引擎。
+  - 每个切分带完整 `coord_source`（point_id、坐标版本、规则版本、经纬度）；
+  - 试算只落 `seg-vN.trialM` 版本与 `{批次}_registry.json` 台账，不改已确认分段；
+  - 沿用判据为「同终端 + 同点集 + 同里程」，跨终端分段绝不挂接；
+  - 确认后新分段登记、原分段置 `superseded` 并保留 `superseded_by` 引用链与里程差额，
+    合并/拆分/变更在终端级汇总中区分，未受影响终端里程差额恒为 0。
+- `services/route_inspection.py` + `routers/route_inspection.py`：路径巡检申请。
+  - 打开时快照当时已确认分段（打开即通过核查的旧分段，重算期间保留）；
+  - 首版交付锁定为对账基准，后续任何版本选择都不得改写；
+  - `recalculate` 发起试算、`choose` 由切分端独立确认；
+  - 对账接口按终端输出新旧里程、差额、沿用分段与被撤销原分段引用；
+    `待复验分段` 给出下次仍需复验的旧分段；
+  - 已交接首段只能按原航段版本查原始坐标来源。
+
+相关接口前缀：`/api/route-inspection/applications`（打开/交付/重算/选择/对账/坐标来源）。
+
 领域：数据工程
 子方向：数据分析与数据应用
